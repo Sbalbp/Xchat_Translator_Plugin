@@ -32,17 +32,35 @@ errors_on = True
 
 def notify(text, info = True):
 	if(info or errors_on):
-		xchat.command("GUI MSGBOX \""+text+"\"")
+		xchat.command('GUI MSGBOX \"'+text+'\"')
+
+def apertium_apy_cb(word, word_eol, userdata):
+	if(len(word) <= 1):
+		notify('APY address:\n'+iface.getAPYAddress())
+	else:
+		if(iface.setAPYAddress(word[1]) == None):
+			notify('Couldn\'t change APY address\nNo response from given server',info=False)
+		else:
+			files.setKey('apyAddress',word[1])
+			notify('Successfully changed the APY address to '+word[1])
+
+	return xchat.EAT_NONE
 
 def apertium_pairs_cb(word, word_eol, userdata):
 	result = iface.getAllPairs()
+	it = 2
 
 	if(result['ok']):
 		resultText = 'Available pairs:\n'
 		result = result['result']
 
 		for pair in result:
-			resultText = resultText+"\n"+pair[0]+" - "+pair[1]
+			if(it == 0):
+				it = 2
+				resultText = resultText+pair[0]+' - '+pair[1]+'\n'
+			else:
+				resultText = resultText+(pair[0]+' - '+pair[1]).ljust(25)
+				it = it-1
 
 		notify(resultText)
 	else:
@@ -53,8 +71,10 @@ def apertium_pairs_cb(word, word_eol, userdata):
 def unload_cb(userdata):
     files.save()
 
-files.setFile("apertium_xchat_plugin_preferences.pkl")
+files.setFile('apertium_xchat_plugin_preferences.pkl')
 files.read()
+iface.setAPYAddress(files.getKey('apyAddress'))
 
 xchat.hook_unload(unload_cb)
-xchat.hook_command("apertium_pairs", apertium_pairs_cb, help='/apertium_pairs\nShows all the available Apertium language pairs that can be used.')
+xchat.hook_command('apertium_apy', apertium_apy_cb, help='/apertium_apy <address>\nChanges the apy address where translation requests are sent. If no arguments are passed, it just shows the address.')
+xchat.hook_command('apertium_pairs', apertium_pairs_cb, help='/apertium_pairs\nShows all the available Apertium language pairs that can be used.')

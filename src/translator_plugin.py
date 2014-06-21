@@ -49,6 +49,33 @@ def notify(text, info = True):
 	if(info or errors_on):
 		xchat.command('GUI MSGBOX \"'+text+'\"')
 
+def parseBindArguments(args):
+	numArgs = len(args)
+
+	if(numArgs < 3):
+		notify('Not enough arguments provided', info=False)
+		return False
+
+	if(numArgs > 3):
+		user = 1
+	else:
+		user = 0
+
+	if(not args[0] in ['incoming','outgoing']):
+		notify('First argument must be either \'incoming\' or \'outgoing\'', info=False)
+		return False
+	else:
+		isPair = iface.pairExists(args[1+user],args[2+user])
+		if(isPair['ok']):
+			if(not isPair['result']):
+				notify('Pair '+args[1+user]+' - '+args[2+user]+' does not exist', info=False)
+				return False
+		else:
+			notify(isPair['errorMsg'], info=False)
+			return False
+
+	return True
+
 def translate(text, user, direction):
 	result = None
 
@@ -105,6 +132,35 @@ def apertium_pairs_cb(word, word_eol, userdata):
 
 	return xchat.EAT_NONE
 
+def apertium_bind_cb(word, word_eol, userdata):
+	if(parseBindArguments(word[1:])):
+		if(len(word) > 4):
+			user = 1
+		else:
+			user = 0
+
+		dictionary = files.getDictionary()
+		newDict = {}
+		newDict['source'] = word[2+user]
+		newDict['target'] = word[3+user]
+
+		if(user == 1):
+			dictionary[word[1]][word[2]+'@'+getFullChannel()]=newDict
+		else:
+			dictionary[word[1]][getFullChannel()]=newDict
+
+		files.setDictionary(dictionary)
+
+def apertium_default_cb(word, word_eol, userdata):
+	if(parseBindArguments(word[1:])):
+		dictionary = files.getDictionary()
+		newDict = {}
+		newDict['source'] = word[2]
+		newDict['target'] = word[3]
+		dictionary[word[1]]['default']=newDict
+
+		files.setDictionary(dictionary)
+
 def translate_cb(word, word_eol, userdata):
 	translation = translate(word[1],word[0],'incoming')
 
@@ -122,5 +178,7 @@ iface.setAPYAddress(files.getKey('apyAddress'))
 xchat.hook_unload(unload_cb)
 xchat.hook_command('apertium_apy', apertium_apy_cb, help='/apertium_apy <address>\nChanges the apy address where translation requests are sent. If no arguments are passed, it just shows the address.')
 xchat.hook_command('apertium_pairs', apertium_pairs_cb, help='/apertium_pairs\nShows all the available Apertium language pairs that can be used.')
+xchat.hook_command('apertium_bind', apertium_bind_cb, help='/apertium_bind <direction> <user> <source> <target>\nBinds a given language pair to a user or channel.\ndirection must be either \'incoming\' or \'outgoing\'.\nuser (optional) is the name of the user whose messages are translated using the given language pair. If omitted, the language pair is bound to the channel itself.\nsource and target are the codes for the source and target languages from the language pair, respectively.')
+xchat.hook_command('apertium_default', apertium_default_cb, help='/apertium_default <direction> <source> <target>\nSets a given language pair as default when no bindings exist for users or channels.\ndirection must be either \'incoming\' or \'outgoing\'.\nsource and target are the codes for the source and target languages from the language pair, respectively.')
 
 xchat.hook_print("Channel Message", translate_cb)

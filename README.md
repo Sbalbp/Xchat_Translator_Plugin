@@ -25,3 +25,13 @@ For this plugin to work, it is first necessary to install the python module incl
 ###Loading the plugin
 
 To load the plugin with XChat go to XChat -> Load script or plugin and select the .py file that is included inside the src folder. Alternatively, you can also use the /load *route* command in XChat to load the plugin.
+
+###Plugin commands
+
+THe following commands can be used in XChat when the plugin is loaded:
+
+* **/apertium_apy _address_** Changes the apy address where translation requests are sent. If no arguments are passed, it just shows the address. The default address is http://localhost:2737.
+* **/apertium_pairs** Ask the apy which language pairs are available and shows them.
+* **/apertium_bind _direction_ _user_ _source_ _target_** Sets a language pair for the given *user*. *direction* must be either 'incoming' (for incoming messages) or 'outgoing' (for messages sent). *source* and *target* are the source and target languages of the language pair to be set, respectively. If no *user* is provided, the language pair is instead bound to the current channel.
+* **/apertium_default _direction_ _source_ _target_** Sets the language pair to be used to translate messages when there is no language pair for the user that sent the message nor the channel it was sent on. *direction* must be either 'incoming' (for incoming messages) or 'outgoing' (for messages sent). *source* and *target* are the source and target languages of the language pair to be set, respectively.
+* **/apertium_block _user_** Blocks a given *user* so that their messages are not translated.

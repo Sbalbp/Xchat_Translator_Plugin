@@ -35,6 +35,18 @@ except:
 parser = HTMLParser.HTMLParser()
 errors_on = True
 
+def notify(text, info = True):
+	if(info or errors_on):
+		xchat.command('GUI MSGBOX \"'+text+'\"')
+
+def userBlocked(user):
+	blocked = files.getKey('blocked')
+
+	if(blocked != None and getFullChannel() in blocked.keys() and user in blocked[getFullChannel()]):
+		return True
+
+	return False
+
 def getFullChannel():
 	fullChannel = ''
 	list = xchat.get_list('channels')
@@ -44,10 +56,6 @@ def getFullChannel():
 			fullChannel = fullChannel+i.channel+'.'
 
 	return fullChannel
-
-def notify(text, info = True):
-	if(info or errors_on):
-		xchat.command('GUI MSGBOX \"'+text+'\"')
 
 def parseBindArguments(args):
 	numArgs = len(args)
@@ -78,6 +86,9 @@ def parseBindArguments(args):
 
 def translate(text, user, direction):
 	result = None
+
+	if(userBlocked(user)):
+		return None
 
 	if(direction != 'incoming' and direction != 'outgoing'):
 		return None
@@ -150,6 +161,10 @@ def apertium_bind_cb(word, word_eol, userdata):
 			dictionary[word[1]][getFullChannel()]=newDict
 
 		files.setDictionary(dictionary)
+		if(user == 1):
+			notify('Successfully set '+word[3]+' - '+word[4]+' as the '+word[1]+' language pair for '+word[2]+'@'+getFullChannel())
+		else:
+			notify('Successfully set '+word[2]+' - '+word[3]+' as the '+word[1]+' language pair for '+getFullChannel())
 
 def apertium_default_cb(word, word_eol, userdata):
 	if(parseBindArguments(word[1:])):
@@ -160,6 +175,23 @@ def apertium_default_cb(word, word_eol, userdata):
 		dictionary[word[1]]['default']=newDict
 
 		files.setDictionary(dictionary)
+
+def apertium_block_cb(word, word_eol, userdata):
+	if(len(word) < 2):
+		notify('Not enough arguments provided', info=False)
+		return
+
+	blocked = files.getKey('blocked')
+
+	if(blocked == None):
+		blocked = {}
+
+	if(not(getFullChannel() in blocked.keys())):
+		blocked[getFullChannel()] = []
+	blocked[getFullChannel()].append(word[1])
+
+	files.setKey('blocked',blocked)
+
 
 def translate_cb(word, word_eol, userdata):
 	translation = translate(word[1],word[0],'incoming')
@@ -180,5 +212,6 @@ xchat.hook_command('apertium_apy', apertium_apy_cb, help='/apertium_apy <address
 xchat.hook_command('apertium_pairs', apertium_pairs_cb, help='/apertium_pairs\nShows all the available Apertium language pairs that can be used.')
 xchat.hook_command('apertium_bind', apertium_bind_cb, help='/apertium_bind <direction> <user> <source> <target>\nBinds a given language pair to a user or channel.\ndirection must be either \'incoming\' or \'outgoing\'.\nuser (optional) is the name of the user whose messages are translated using the given language pair. If omitted, the language pair is bound to the channel itself.\nsource and target are the codes for the source and target languages from the language pair, respectively.')
 xchat.hook_command('apertium_default', apertium_default_cb, help='/apertium_default <direction> <source> <target>\nSets a given language pair as default when no bindings exist for users or channels.\ndirection must be either \'incoming\' or \'outgoing\'.\nsource and target are the codes for the source and target languages from the language pair, respectively.')
+xchat.hook_command('apertium_block', apertium_block_cb, help='/apertium_block <user>\nBlocks the given user so that their messages are not translated in the current channel.')
 
 xchat.hook_print("Channel Message", translate_cb)

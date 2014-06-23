@@ -27,12 +27,10 @@ __module_author__ = "Sergio Balbuena <sbalbp@gmail.com>"
 import xchat
 import apertiumpluginutils.apertiumInterfaceAPY as iface
 import apertiumpluginutils.apertiumFiles as files
-try:
-    import html.parser as HTMLParser
-except:
-	import HTMLParser
+import sys
 
-parser = HTMLParser.HTMLParser()
+pyVersion = sys.version_info[0]
+
 errors_on = True
 
 def notify(text, info = True):
@@ -197,7 +195,10 @@ def translate_cb(word, word_eol, userdata):
 	translation = translate(word[1],word[0],'incoming')
 
 	if(translation != None):
-		print('\ntranslation:\n'+(parser.unescape(translation)).encode('utf-8')+'\n')
+		if(pyVersion >= 3):
+			print('\ntranslation:\n'+(translation.decode('utf-8'))+'\n')
+		else:
+			print('\ntranslation:\n'+translation+'\n')
 
 def unload_cb(userdata):
     files.save()
@@ -205,7 +206,6 @@ def unload_cb(userdata):
 files.setFile('apertium_xchat_plugin_preferences.pkl')
 files.read()
 iface.setAPYAddress(files.getKey('apyAddress'))
-
 
 xchat.hook_unload(unload_cb)
 xchat.hook_command('apertium_apy', apertium_apy_cb, help='/apertium_apy <address>\nChanges the apy address where translation requests are sent. If no arguments are passed, it just shows the address.')

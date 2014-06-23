@@ -1,5 +1,5 @@
 #
-# XChat Translator Plugin.
+# Pidgin Translator Plugin.
 #
 # Copyright (C) 2014 Sergio Balbuena <sbalbp@gmail.com>.
 #
@@ -23,9 +23,17 @@
 # Acts as an interface with an Apertium-APY
 
 try:
+	import urllib.parse as parse
+except:
+	pass
+try:
     import urllib.request as urllib2
 except:
 	import urllib2
+try:
+    import html.parser as HTMLParser
+except:
+	import HTMLParser
 import sys
 import json
 
@@ -34,6 +42,9 @@ pyVersion = sys.version_info[0]
 
 ## Address of the Apertium-APY
 apyAddress = 'http://localhost:2737'
+
+## Parser that will unescape APY responses
+parser = HTMLParser.HTMLParser()
 
 ## Checks whether an APY server is running in the given address or not
 #
@@ -284,7 +295,10 @@ def translate(text, source, target):
 		if(result['result']):
 
 			try:
-				request = urllib2.urlopen((apyAddress+'/translate?q='+text+'&langpair='+source+'|'+target).replace(' ','%20'))
+				if(pyVersion >= 3):
+					request = urllib2.urlopen(parse.quote_plus((apyAddress+'/translate?q='+text+'&langpair='+source+'|'+target),safe=':/=?&|',encoding=None,errors=None))
+				else:
+					request = urllib2.urlopen((apyAddress+'/translate?q='+text+'&langpair='+source+'|'+target).replace(' ','%20'))
 			except urllib2.URLError:
 				return {'ok':False, 'errorMsg':'Error on connection'.encode('utf-8')}
 			except urllib2.HTTPError:
@@ -297,7 +311,7 @@ def translate(text, source, target):
 				else:
 					jsonObj = json.load(request)
 
-				return {'ok':True, 'result':jsonObj['responseData']['translatedText'].encode('utf-8')}
+				return {'ok':True, 'result':parser.unescape(jsonObj['responseData']['translatedText']).replace('%20',' ').encode('utf-8')}
 
 			else:
 				return {'ok':False, 'errorMsg':'Response '+str(request.getcode())+' from APY'}

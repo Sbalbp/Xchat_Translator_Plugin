@@ -164,6 +164,26 @@ def apertium_bind_cb(word, word_eol, userdata):
 		else:
 			notify('Successfully set '+word[2]+' - '+word[3]+' as the '+word[1]+' language pair for '+getFullChannel())
 
+def apertium_unbind_cb(word, word_eol, userdata):
+	if(len(word) > 1):
+		key = word[1]+'@'+getFullChannel()
+	else:
+		key = getFullChannel()
+
+	success = False
+	dictionary = files.getDictionary()
+
+	if key in dictionary['incoming']:
+		del dictionary['incoming'][key]
+		success = True
+	if key in dictionary['outgoing']:
+		del dictionary['outgoing'][key]
+		success = True
+
+	if(success):
+		files.setDictionary(dictionary)
+		notify('Successfully removed bindings for '+key)
+
 def apertium_default_cb(word, word_eol, userdata):
 	if(parseBindArguments(word[1:])):
 		dictionary = files.getDictionary()
@@ -190,6 +210,15 @@ def apertium_block_cb(word, word_eol, userdata):
 
 	files.setKey('blocked',blocked)
 
+def apertium_unblock_cb(word, word_eol, userdata):
+	if(len(word) < 2):
+		notify('Not enough arguments provided', info=False)
+		return
+
+	if(userBlocked(word[1])):
+		blocked = files.getKey('blocked')
+		blocked[getFullChannel()].remove(word[1])
+		files.setKey('blocked',blocked)
 
 def translate_cb(word, word_eol, userdata):
 	translation = translate(word[1],word[0],'incoming')
@@ -211,7 +240,9 @@ xchat.hook_unload(unload_cb)
 xchat.hook_command('apertium_apy', apertium_apy_cb, help='/apertium_apy <address>\nChanges the apy address where translation requests are sent. If no arguments are passed, it just shows the address.')
 xchat.hook_command('apertium_pairs', apertium_pairs_cb, help='/apertium_pairs\nShows all the available Apertium language pairs that can be used.')
 xchat.hook_command('apertium_bind', apertium_bind_cb, help='/apertium_bind <direction> <user> <source> <target>\nBinds a given language pair to a user or channel.\ndirection must be either \'incoming\' or \'outgoing\'.\nuser (optional) is the name of the user whose messages are translated using the given language pair. If omitted, the language pair is bound to the channel itself.\nsource and target are the codes for the source and target languages from the language pair, respectively.')
+xchat.hook_command('apertium_unbind', apertium_unbind_cb, help='/apertium_unbind <user>\nUnbinds the langugage pair associated to a user or channel.\nuser (optional) is the name of the user whose language pairs is to be unbound. If omitted, the language pair is unbound from the channel itself.')
 xchat.hook_command('apertium_default', apertium_default_cb, help='/apertium_default <direction> <source> <target>\nSets a given language pair as default when no bindings exist for users or channels.\ndirection must be either \'incoming\' or \'outgoing\'.\nsource and target are the codes for the source and target languages from the language pair, respectively.')
 xchat.hook_command('apertium_block', apertium_block_cb, help='/apertium_block <user>\nBlocks the given user so that their messages are not translated in the current channel.')
+xchat.hook_command('apertium_unblock', apertium_unblock_cb, help='/apertium_unblock <user>\nUnblocks the given user so that their messages are translated again in the current channel.')
 
 xchat.hook_print("Channel Message", translate_cb)

@@ -33,6 +33,10 @@ pyVersion = sys.version_info[0]
 
 errors_on = True
 
+displayMode = 'both'
+
+custom_emit = False
+
 def notify(text, info = True):
 	if(info or errors_on):
 		xchat.command('GUI MSGBOX \"'+text+'\"')
@@ -102,8 +106,8 @@ def translate(text, user, direction):
 		if(result['ok']):
 			result = result['result']
 		else:
+			notify(result['errorMsg'], info=False)
 			result = None
-			notify(result['errorMsg'])
 
 	return result
 
@@ -220,14 +224,43 @@ def apertium_unblock_cb(word, word_eol, userdata):
 		blocked[getFullChannel()].remove(word[1])
 		files.setKey('blocked',blocked)
 
+def apertium_display_cb(word, word_eol, userdata):
+	if(len(word) < 2):
+		notify('Not enough arguments provided', info=False)
+		return
+
+	if(not word[1] in ['both','replace']):
+		notify('Display mode argument must be \'both\' or \'replace\'', info=False)
+		return
+
+	displayMode = word[1]
+	files.setKey('displayMode',displayMode)
+	notify('Successfully set display mode to '+displayMode)
+
 def translate_cb(word, word_eol, userdata):
+	global custom_emit
+
+	if(custom_emit):
+		return xchat.EAT_NONE
+
 	translation = translate(word[1],word[0],'incoming')
 
 	if(translation != None):
 		if(pyVersion >= 3):
-			print('\ntranslation:\n'+(translation.decode('utf-8'))+'\n')
+			translation = translation.decode('utf-8')
+
+		#print('\ntranslation:\n'+translation+'\n')
+		if(displayMode == 'both'):
+			text = '--- Original ---\n'+word[1]+'\n--- Translation ---\n'+translation
+		elif(displayMode == 'replace'):
+			text = translation
 		else:
-			print('\ntranslation:\n'+translation+'\n')
+			text = word[1]
+
+		custom_emit = True
+		xchat.emit_print('Channel Message', word[0], text)
+		custom_emit = False
+		return xchat.EAT_ALL
 
 def unload_cb(userdata):
     files.save()
@@ -235,6 +268,12 @@ def unload_cb(userdata):
 files.setFile('apertium_xchat_plugin_preferences.pkl')
 files.read()
 iface.setAPYAddress(files.getKey('apyAddress'))
+
+if(files.getKey('displayMode') != None):
+	displayMode = files.getKey('displayMode')
+else:
+	displayMode = 'both'
+	files.setKey('displayMode',displayMode)
 
 xchat.hook_unload(unload_cb)
 xchat.hook_command('apertium_apy', apertium_apy_cb, help='/apertium_apy <address>\nChanges the apy address where translation requests are sent. If no arguments are passed, it just shows the address.')
@@ -244,5 +283,6 @@ xchat.hook_command('apertium_unbind', apertium_unbind_cb, help='/apertium_unbind
 xchat.hook_command('apertium_default', apertium_default_cb, help='/apertium_default <direction> <source> <target>\nSets a given language pair as default when no bindings exist for users or channels.\ndirection must be either \'incoming\' or \'outgoing\'.\nsource and target are the codes for the source and target languages from the language pair, respectively.')
 xchat.hook_command('apertium_block', apertium_block_cb, help='/apertium_block <user>\nBlocks the given user so that their messages are not translated in the current channel.')
 xchat.hook_command('apertium_unblock', apertium_unblock_cb, help='/apertium_unblock <user>\nUnblocks the given user so that their messages are translated again in the current channel.')
+xchat.hook_command('apertium_display', apertium_display_cb, help='/apertium_display <display_mode>\nSelects how translated messages should be displayed.\n display_mode must be one of the following:\n\'both\' Displays both the original message and its translation.\n\'replace\' Only the translated message is displayed.')
 
-xchat.hook_print("Channel Message", translate_cb)
+xchat.hook_print('Channel Message', translate_cb)

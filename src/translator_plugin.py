@@ -31,15 +31,20 @@ import sys
 
 pyVersion = sys.version_info[0]
 
-errors_on = True
+errorsMode = 'dialog'
 
 displayMode = 'both'
 
 custom_emit = False
 
 def notify(text, info = True):
-	if(info or errors_on):
+	if(info):
 		xchat.command('GUI MSGBOX \"'+text+'\"')
+	else:
+		if(errorsMode == 'dialog'):
+			xchat.command('GUI MSGBOX \"'+text+'\"')
+		elif(errorsMode == 'print'):
+			print('Translator plugin error: '+text)
 
 def userBlocked(user):
 	blocked = files.getKey('blocked')
@@ -225,6 +230,8 @@ def apertium_unblock_cb(word, word_eol, userdata):
 		files.setKey('blocked',blocked)
 
 def apertium_display_cb(word, word_eol, userdata):
+	global displayMode
+
 	if(len(word) < 2):
 		notify('Not enough arguments provided', info=False)
 		return
@@ -236,6 +243,19 @@ def apertium_display_cb(word, word_eol, userdata):
 	displayMode = word[1]
 	files.setKey('displayMode',displayMode)
 	notify('Successfully set display mode to '+displayMode)
+
+def apertium_errordisplay_cb(word, word_eol, userdata):
+	global errorsMode
+
+	if(len(word) < 2):
+		notify('Not enough arguments provided', info=False)
+		return
+
+	if(not word[1] in ['dialog','print','none']):
+		notify('Display mode argument must be \'dialog\', \'print\' or \'none\'', info=False)
+		return
+
+	errorsMode = word[1]
 
 def translate_cb(word, word_eol, userdata):
 	global custom_emit
@@ -249,7 +269,6 @@ def translate_cb(word, word_eol, userdata):
 		if(pyVersion >= 3):
 			translation = translation.decode('utf-8')
 
-		#print('\ntranslation:\n'+translation+'\n')
 		if(displayMode == 'both'):
 			text = '--- Original ---\n'+word[1]+'\n--- Translation ---\n'+translation
 		elif(displayMode == 'replace'):
@@ -284,5 +303,6 @@ xchat.hook_command('apertium_default', apertium_default_cb, help='/apertium_defa
 xchat.hook_command('apertium_block', apertium_block_cb, help='/apertium_block <user>\nBlocks the given user so that their messages are not translated in the current channel.')
 xchat.hook_command('apertium_unblock', apertium_unblock_cb, help='/apertium_unblock <user>\nUnblocks the given user so that their messages are translated again in the current channel.')
 xchat.hook_command('apertium_display', apertium_display_cb, help='/apertium_display <display_mode>\nSelects how translated messages should be displayed.\n display_mode must be one of the following:\n\'both\' Displays both the original message and its translation.\n\'replace\' Only the translated message is displayed.')
+xchat.hook_command('apertium_errordisplay', apertium_errordisplay_cb, help='/apertium_errordisplay <error_display_mode>\nSelects how errors should be displayed.\n error_display_mode must be one of the following:\n\'dialog\' Shows a dialog box with the error.\n\'print\' Prints the error in the xchat history.\n\'none\' Errors are not displayed')
 
 xchat.hook_print('Channel Message', translate_cb)

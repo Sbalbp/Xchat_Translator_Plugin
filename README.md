@@ -38,3 +38,4 @@ THe following commands can be used in XChat when the plugin is loaded:
 * **/apertium_block _user_** Blocks a given *user* so that their messages are not translated.
 * **/apertium_unblock _user_** Unblocks a given blocked *user* to have their messages translated again.
 * **/apertium_display _displayMode_** Selects how translated messages are displayed. _displayMode_ must be 'both' (displays the original message and its translation) or 'replace' (only displays the translation).
+* **/apertium_errordisplay _errorDisplayMode_** Selects how errors should be displayed. *errorDisplayMode* must be 'dialog' (shows a dialog box with the error), 'print' (prints the error in the xchat history) or 'none' (errors are not displayed).

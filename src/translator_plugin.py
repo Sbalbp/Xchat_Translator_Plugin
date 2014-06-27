@@ -154,24 +154,15 @@ def apertium_bind_cb(word, word_eol, userdata):
 	if(parseBindArguments(word[1:])):
 		if(len(word) > 4):
 			user = 1
+			username = word[2]+'@'+getFullChannel()
 		else:
 			user = 0
+			username = getFullChannel()
 
-		dictionary = files.getDictionary()
-		newDict = {}
-		newDict['source'] = word[2+user]
-		newDict['target'] = word[3+user]
-
-		if(user == 1):
-			dictionary[word[1]][word[2]+'@'+getFullChannel()]=newDict
+		if(files.setLangPair(word[1],username,word[2+user],word[3+user])):
+			notify('Successfully set '+word[2+user]+' - '+word[3+user]+' as the '+word[1]+' language pair for '+username)
 		else:
-			dictionary[word[1]][getFullChannel()]=newDict
-
-		files.setDictionary(dictionary)
-		if(user == 1):
-			notify('Successfully set '+word[3]+' - '+word[4]+' as the '+word[1]+' language pair for '+word[2]+'@'+getFullChannel())
-		else:
-			notify('Successfully set '+word[2]+' - '+word[3]+' as the '+word[1]+' language pair for '+getFullChannel())
+			notify('An error occurred while binding the language pair')
 
 def apertium_unbind_cb(word, word_eol, userdata):
 	if(len(word) > 1):
@@ -180,28 +171,21 @@ def apertium_unbind_cb(word, word_eol, userdata):
 		key = getFullChannel()
 
 	success = False
-	dictionary = files.getDictionary()
 
-	if key in dictionary['incoming']:
-		del dictionary['incoming'][key]
+	if(files.unsetLangPair('incoming',key)):
 		success = True
-	if key in dictionary['outgoing']:
-		del dictionary['outgoing'][key]
+	if(files.unsetLangPair('outgoing',key)):
 		success = True
 
 	if(success):
-		files.setDictionary(dictionary)
 		notify('Successfully removed bindings for '+key)
 
 def apertium_default_cb(word, word_eol, userdata):
 	if(parseBindArguments(word[1:])):
-		dictionary = files.getDictionary()
-		newDict = {}
-		newDict['source'] = word[2]
-		newDict['target'] = word[3]
-		dictionary[word[1]]['default']=newDict
-
-		files.setDictionary(dictionary)
+		if(files.setLangPair(word[1],'default',word[2],word[3])):
+			notify('Successfully set '+word[2+user]+' - '+word[3+user]+' as the '+word[1]+' default language pair')
+		else:
+			notify('An error occurred while binding the language pair')
 
 def apertium_block_cb(word, word_eol, userdata):
 	if(len(word) < 2):

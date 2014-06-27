@@ -114,6 +114,40 @@ def setKey(key, value):
 
 	dictionary[key] = value
 
+## Sets the language pair to be associated with an user in a direction
+#
+# @param direction String containing 'incoming' or 'outgoing'
+# @param user User the language pair will be associated to
+# @param source Source language of the pair
+# @param target Source language of the pair
+# @return True on success, or Flase otherwise
+def setLangPair(direction, user, source, target):
+	global dictionary
+
+	newDict = {}
+	newDict['source'] = source
+	newDict['target'] = target
+
+	try:
+		dictionary[direction][user]=newDict
+		return True
+	except:
+		return False
+
+## Removes the language pair associated with an user in a direction
+#
+# @param direction String containing 'incoming' or 'outgoing'
+# @param user User whose language pair binding is to be removed
+# @return True on success, or False otherwise
+def unsetLangPair(direction, user):
+	global dictionary
+
+	if(direction in dictionary.keys() and user in dictionary[direction]):
+		del dictionary[direction][user]
+		return True
+	else:
+		return False
+
 ## Retrieves the current dictionary
 #
 # @return The dictionary

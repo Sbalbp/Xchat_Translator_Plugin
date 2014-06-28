@@ -113,6 +113,8 @@ def translate(text, user, direction):
 		else:
 			notify(result['errorMsg'], info=False)
 			result = None
+	else:
+		notify('No language pair associated to '+direction+' messages for '+user)
 
 	return result
 
@@ -183,7 +185,7 @@ def apertium_unbind_cb(word, word_eol, userdata):
 def apertium_default_cb(word, word_eol, userdata):
 	if(parseBindArguments(word[1:])):
 		if(files.setLangPair(word[1],'default',word[2],word[3])):
-			notify('Successfully set '+word[2+user]+' - '+word[3+user]+' as the '+word[1]+' default language pair')
+			notify('Successfully set '+word[2]+' - '+word[3]+' as the '+word[1]+' default language pair')
 		else:
 			notify('An error occurred while binding the language pair')
 
@@ -241,7 +243,7 @@ def apertium_errordisplay_cb(word, word_eol, userdata):
 
 	errorsMode = word[1]
 
-def translate_cb(word, word_eol, userdata):
+def translate_cm_cb(word, word_eol, userdata):
 	global custom_emit
 
 	if(custom_emit):
@@ -264,6 +266,24 @@ def translate_cb(word, word_eol, userdata):
 		xchat.emit_print('Channel Message', word[0], text)
 		custom_emit = False
 		return xchat.EAT_ALL
+
+def translate_ym_cb(word, word_eol, userdata):
+	global custom_emit
+
+	if(custom_emit):
+		return xchat.EAT_NONE
+
+	translation = translate(word[1],'default','outgoing')
+
+	if(translation != None):
+		text = translation
+	else:
+		text = word[1]
+
+	custom_emit = True
+	xchat.emit_print('Your Message', word[0], text)
+	custom_emit = False
+	return xchat.EAT_ALL
 
 def unload_cb(userdata):
     files.save()
@@ -289,4 +309,5 @@ xchat.hook_command('apertium_unblock', apertium_unblock_cb, help='/apertium_unbl
 xchat.hook_command('apertium_display', apertium_display_cb, help='/apertium_display <display_mode>\nSelects how translated messages should be displayed.\n display_mode must be one of the following:\n\'both\' Displays both the original message and its translation.\n\'replace\' Only the translated message is displayed.')
 xchat.hook_command('apertium_errordisplay', apertium_errordisplay_cb, help='/apertium_errordisplay <error_display_mode>\nSelects how errors should be displayed.\n error_display_mode must be one of the following:\n\'dialog\' Shows a dialog box with the error.\n\'print\' Prints the error in the xchat history.\n\'none\' Errors are not displayed')
 
-xchat.hook_print('Channel Message', translate_cb)
+xchat.hook_print('Channel Message', translate_cm_cb)
+xchat.hook_print('Your Message', translate_ym_cb)

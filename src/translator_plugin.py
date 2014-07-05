@@ -290,7 +290,11 @@ def unload_cb(userdata):
 
 files.setFile('apertium_xchat_plugin_preferences.pkl')
 files.read()
-iface.setAPYAddress(files.getKey('apyAddress'))
+
+addressList = files.getKey('apyAddress')
+
+for address in addressList:
+	iface.setAPYAddress(address)
 
 if(files.getKey('displayMode') != None):
 	displayMode = files.getKey('displayMode')

@@ -293,8 +293,7 @@ files.read()
 
 addressList = files.getKey('apyAddress')
 
-for address in addressList:
-	iface.setAPYAddress(address)
+iface.setAPYList(addressList)
 
 if(files.getKey('displayMode') != None):
 	displayMode = files.getKey('displayMode')

@@ -120,13 +120,21 @@ def translate(text, user, direction):
 
 def apertium_apy_cb(word, word_eol, userdata):
 	if(len(word) <= 1):
-		notify('APY address:\n'+iface.getAPYAddress())
+		text = 'APY addresses:\n'
+		for i in range(iface.getAPYListSize()):
+			text = text+'\n'+iface.getAPYAddress(i)
+		notify(text)
+	elif(len(word) == 2):
+		if(iface.getAPYListSize() > int(word[1])):
+			notify('APY address number '+word[1]+':\n\n'+iface.getAPYAddress(int(word[1])))
+		else:
+			notify('Error: Only '+str(iface.getAPYListSize())+' APY addresses available',info=False)
 	else:
-		if(iface.setAPYAddress(word[1]) == None):
+		if(iface.setAPYAddress(word[2],order=int(word[1])) == None):
 			notify('Couldn\'t change APY address\nNo response from given server',info=False)
 		else:
-			files.setKey('apyAddress',word[1])
-			notify('Successfully changed the APY address to '+word[1])
+			files.setKey('apyAddress',iface.getAPYList())
+			notify('Successfully added the APY address: '+word[2])
 
 	return xchat.EAT_NONE
 
@@ -291,9 +299,7 @@ def unload_cb(userdata):
 files.setFile('apertium_xchat_plugin_preferences.pkl')
 files.read()
 
-addressList = files.getKey('apyAddress')
-
-iface.setAPYList(addressList)
+iface.setAPYList(files.getKey('apyAddress'))
 
 if(files.getKey('displayMode') != None):
 	displayMode = files.getKey('displayMode')
@@ -302,7 +308,7 @@ else:
 	files.setKey('displayMode',displayMode)
 
 xchat.hook_unload(unload_cb)
-xchat.hook_command('apertium_apy', apertium_apy_cb, help='/apertium_apy <address>\nChanges the apy address where translation requests are sent. If no arguments are passed, it just shows the address.')
+xchat.hook_command('apertium_apy', apertium_apy_cb, help='/apertium_apy <position> <address>\nAdds a new APY address in a given position of the APY addresses list.\n If no arguments are passed, it just shows the list of addresses. If only the position argument is passed, it shows the APY address at that position.')
 xchat.hook_command('apertium_pairs', apertium_pairs_cb, help='/apertium_pairs\nShows all the available Apertium language pairs that can be used.')
 xchat.hook_command('apertium_bind', apertium_bind_cb, help='/apertium_bind <direction> <user> <source> <target>\nBinds a given language pair to a user or channel.\ndirection must be either \'incoming\' or \'outgoing\'.\nuser (optional) is the name of the user whose messages are translated using the given language pair. If omitted, the language pair is bound to the channel itself.\nsource and target are the codes for the source and target languages from the language pair, respectively.')
 xchat.hook_command('apertium_unbind', apertium_unbind_cb, help='/apertium_unbind <user>\nUnbinds the langugage pair associated to a user or channel.\nuser (optional) is the name of the user whose language pairs is to be unbound. If omitted, the language pair is unbound from the channel itself.')

@@ -69,6 +69,12 @@ def checkAPY(address):
 
 	return True
 
+## Retrieves the length of the APY list
+#
+# @return The number of APYs currently in the list
+def getAPYListSize():
+	return len(apyAddress)
+
 ## Retrieves an APY from the current APY list
 #
 # @param index Position of the APY to be retrieved from the list. 0 if omitted
@@ -120,13 +126,20 @@ def setAPYAddress(newAddress, newPort=None, order=None, force=False):
 	else:
 		return None
 
-## Adds a list of APY addresses to the address list
+## Retrieves the list of APY addresses
+#
+# @return The list of APY addresses
+def getAPYList():
+	return apyAddress
+
+## Sets a list of APY addresses as the address list
 #
 # @param newList List ocntaining the addresses to be added
 # @return The actual number of APY addresses added
 def setAPYList(newList):
 	global apyAddress
 
+	apyAddress = []
 	success = 0
 
 	for address in newList:

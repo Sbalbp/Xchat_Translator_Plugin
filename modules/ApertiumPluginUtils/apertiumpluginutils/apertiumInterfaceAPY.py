@@ -126,6 +126,19 @@ def setAPYAddress(newAddress, newPort=None, order=None, force=False):
 	else:
 		return None
 
+## Removes an APY from the APY list
+#
+# @param index Index of the address to remove in the list
+# @return True on success or False otherwise
+def removeAPYAddress(index):
+	global apyAddress
+
+	if(index >= len(apyAddress)):
+		return False
+	else:
+		apyAddress.pop(index)
+		return True
+
 ## Retrieves the list of APY addresses
 #
 # @return The list of APY addresses

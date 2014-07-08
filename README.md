@@ -31,6 +31,7 @@ To load the plugin with XChat go to XChat -> Load script or plugin and select th
 THe following commands can be used in XChat when the plugin is loaded:
 
 * **/apertium_apy _position_ _address_** Inserts an APY *address* at the given *position* of the APY list. If no arguments are passed, it just shows the list of addresses. If the *address* argument is omitted, the address at the given *position* is shown. The default address list only contains http://localhost:2737 (default address of a local APY).
+* **/apertium_apyremove _position_** Removes athe APY at the given *position* from the APY list. If no arguments are passed, all the APYs are removed.
 * **/apertium_pairs** Ask the apy which language pairs are available and shows them.
 * **/apertium_bind _direction_ _user_ _source_ _target_** Sets a language pair for the given *user*. *direction* must be either 'incoming' (for incoming messages) or 'outgoing' (for messages sent). *source* and *target* are the source and target languages of the language pair to be set, respectively. If no *user* is provided, the language pair is instead bound to the current channel.
 * **/apertium_unbind _user_** Unbinds the langugage pair associated to a user or channel. *user* (optional) is the name of the user whose associated language pair is to be unbound. If omitted, the language pair is unbound from the channel itself.

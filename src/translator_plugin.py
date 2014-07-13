@@ -174,6 +174,51 @@ def apertium_pairs_cb(word, word_eol, userdata):
 
 	return xchat.EAT_NONE
 
+def apertium_check_cb(word, word_eol, userdata):
+	incoming = files.getKey('incoming')
+	outgoing = files.getKey('outgoing')
+	channel = getFullChannel()
+	text = ''
+
+	if(len(word) < 2):
+		text = text+'Default language settings:\n\n  incoming: '
+		if 'default' in incoming.keys():
+			text = text+incoming['default']['source']+' - '+incoming['default']['target']+'\n'
+		else:
+			text = text+'None\n'
+
+		text = text+'  outgoing: '
+		if 'default' in outgoing.keys():
+			text = text+outgoing['default']['source']+' - '+outgoing['default']['target']+'\n\n'
+		else:
+			text = text+'None\n\n'
+
+		text = text+'Language settings for this channel:\n\n  incoming: '
+		if channel in incoming.keys():
+			text = text+incoming[channel]['source']+' - '+incoming[channel]['target']+'\n'
+		else:
+			text = text+'None\n'
+
+		text = text+'  outgoing: '
+		if channel in outgoing.keys():
+			text = text+outgoing[channel]['source']+' - '+outgoing[channel]['target']+''
+		else:
+			text = text+'None'
+	else:
+		text = text+'Language settings for user '+word[1]+'@'+channel+':\n\n incoming: '
+		if word[1]+'@'+channel in incoming.keys():
+			text = text+incoming[word[1]+'@'+channel]['source']+' - '+incoming[word[1]+'@'+channel]['target']+'\n'
+		else:
+			text = text+'None\n'
+
+		text = text+'  outgoing: '
+		if word[1]+'@'+channel in outgoing.keys():
+			text = text+outgoing[word[1]+'@'+channel]['source']+' - '+outgoing[word[1]+'@'+channel]['target']
+		else:
+			text = text+'None'
+
+	notify(text)
+
 def apertium_bind_cb(word, word_eol, userdata):
 	if(parseBindArguments(word[1:])):
 		if(len(word) > 4):
@@ -325,6 +370,7 @@ xchat.hook_unload(unload_cb)
 xchat.hook_command('apertium_apy', apertium_apy_cb, help='/apertium_apy <position> <address>\nAdds a new APY address in a given position of the APY addresses list.\n If no arguments are passed, it just shows the list of addresses. If only the position argument is passed, it shows the APY address at that position.')
 xchat.hook_command('apertium_apyremove', apertium_apyremove_cb, help='/apertium_apyremove <position>\nRemoves the APY address at the given position from the APY list.\nIf no arguments are given, all the APYs are removed.')
 xchat.hook_command('apertium_pairs', apertium_pairs_cb, help='/apertium_pairs\nShows all the available Apertium language pairs that can be used.')
+xchat.hook_command('apertium_check', apertium_check_cb, help='/apertium_check <user>\nShows the current language pair bindings for the given user.\nIf no argument is passed, shows the default and current channel language pair bindings.')
 xchat.hook_command('apertium_bind', apertium_bind_cb, help='/apertium_bind <direction> <user> <source> <target>\nBinds a given language pair to a user or channel.\ndirection must be either \'incoming\' or \'outgoing\'.\nuser (optional) is the name of the user whose messages are translated using the given language pair. If omitted, the language pair is bound to the channel itself.\nsource and target are the codes for the source and target languages from the language pair, respectively.')
 xchat.hook_command('apertium_unbind', apertium_unbind_cb, help='/apertium_unbind <user>\nUnbinds the langugage pair associated to a user or channel.\nuser (optional) is the name of the user whose language pairs is to be unbound. If omitted, the language pair is unbound from the channel itself.')
 xchat.hook_command('apertium_default', apertium_default_cb, help='/apertium_default <direction> <source> <target>\nSets a given language pair as default when no bindings exist for users or channels.\ndirection must be either \'incoming\' or \'outgoing\'.\nsource and target are the codes for the source and target languages from the language pair, respectively.')

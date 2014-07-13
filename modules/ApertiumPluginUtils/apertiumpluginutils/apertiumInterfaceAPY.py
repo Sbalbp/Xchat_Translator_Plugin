@@ -1,5 +1,5 @@
 #
-# Pidgin Translator Plugin.
+# XChat Translator Plugin.
 #
 # Copyright (C) 2014 Sergio Balbuena <sbalbp@gmail.com>.
 #

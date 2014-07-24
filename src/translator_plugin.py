@@ -286,7 +286,12 @@ def apertium_display_cb(word, word_eol, userdata):
 	global displayMode
 
 	if(len(word) < 2):
-		notify('Not enough arguments provided', info=False)
+		text = ''
+		if(displayMode == 'both'):
+			text = '"Both"\nBoth the original message and its translation are displayed'
+		else:
+			text = '"Replace"\nOnly the translated message is displayed'
+		notify('Current display mode:\n'+text, info=True)
 		return
 
 	if(not word[1] in ['both','replace']):

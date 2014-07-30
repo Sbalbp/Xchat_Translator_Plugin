@@ -18,7 +18,7 @@ The translating is done by an [Apertium-apy](http://wiki.apertium.org/wiki/Apy "
 
 ###Installing
 
-For this plugin to work, it is first necessary to install the python module included in this repository 'ApertiumPluginUtils', as it is used by the plugin:
+For this plugin to work, it is first necessary to install the python module included in this repository as a git submodule (folder 'Apertium_Plugin_Utils'), as it is used by the plugin:
 
 * python setup.py install
 

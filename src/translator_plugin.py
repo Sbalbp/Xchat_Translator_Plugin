@@ -116,7 +116,7 @@ def translate(text, user, direction):
 	else:
 		notify('No language pair associated to '+direction+' messages for '+user)
 
-	return result
+	return [result, [dictionary[key]['source'],dictionary[key]['target']]]
 
 def apertium_apy_cb(word, word_eol, userdata):
 	if(len(word) <= 1):
@@ -289,13 +289,15 @@ def apertium_display_cb(word, word_eol, userdata):
 		text = ''
 		if(displayMode == 'both'):
 			text = '"Both"\nBoth the original message and its translation are displayed'
-		else:
+		elif(displayMode == 'replace'):
 			text = '"Replace"\nOnly the translated message is displayed'
+		elif(displayMode == 'compressed'):
+			text = '"Compressed"\nBoth the original message and its translation are displayed in a compressed way'
 		notify('Current display mode:\n'+text, info=True)
 		return
 
-	if(not word[1] in ['both','replace']):
-		notify('Display mode argument must be \'both\' or \'replace\'', info=False)
+	if(not word[1] in ['both','replace','compressed']):
+		notify('Display mode argument must be \'both\', \'replace\' or \'compressed\'', info=False)
 		return
 
 	displayMode = word[1]
@@ -321,7 +323,8 @@ def translate_cm_cb(word, word_eol, userdata):
 	if(custom_emit):
 		return xchat.EAT_NONE
 
-	translation = translate(word[1],word[0],'incoming')
+	result = translate(word[1],word[0],'incoming')
+	translation = result[0]
 
 	if(translation != None):
 		if(pyVersion >= 3):
@@ -331,6 +334,8 @@ def translate_cm_cb(word, word_eol, userdata):
 			text = '--- Original ---\n'+word[1]+'\n--- Translation ---\n'+translation
 		elif(displayMode == 'replace'):
 			text = translation
+		elif(displayMode == 'compressed'):
+			text = word[1]+'\napertium '+result[1][0]+'-'+result[1][1]+': '+translation
 		else:
 			text = word[1]
 
@@ -345,7 +350,8 @@ def translate_ym_cb(word, word_eol, userdata):
 	if(custom_emit):
 		return xchat.EAT_NONE
 
-	translation = translate(word[1],'default','outgoing')
+	result = translate(word[1],'default','outgoing')
+	translation = result[0]
 
 	if(translation != None):
 		text = translation
@@ -381,7 +387,7 @@ xchat.hook_command('apertium_unbind', apertium_unbind_cb, help='/apertium_unbind
 xchat.hook_command('apertium_default', apertium_default_cb, help='/apertium_default <direction> <source> <target>\nSets a given language pair as default when no bindings exist for users or channels.\ndirection must be either \'incoming\' or \'outgoing\'.\nsource and target are the codes for the source and target languages from the language pair, respectively.')
 xchat.hook_command('apertium_block', apertium_block_cb, help='/apertium_block <user>\nBlocks the given user so that their messages are not translated in the current channel.')
 xchat.hook_command('apertium_unblock', apertium_unblock_cb, help='/apertium_unblock <user>\nUnblocks the given user so that their messages are translated again in the current channel.')
-xchat.hook_command('apertium_display', apertium_display_cb, help='/apertium_display <display_mode>\nSelects how translated messages should be displayed.\n display_mode must be one of the following:\n\'both\' Displays both the original message and its translation.\n\'replace\' Only the translated message is displayed.')
+xchat.hook_command('apertium_display', apertium_display_cb, help='/apertium_display <display_mode>\nSelects how translated messages should be displayed.\n display_mode must be one of the following:\n\'both\' Displays both the original message and its translation.\n\'replace\' Only the translated message is displayed.\n\'compressed\' Shows both the original text and its translation, in a compressed 2-line way.')
 xchat.hook_command('apertium_errordisplay', apertium_errordisplay_cb, help='/apertium_errordisplay <error_display_mode>\nSelects how errors should be displayed.\n error_display_mode must be one of the following:\n\'dialog\' Shows a dialog box with the error.\n\'print\' Prints the error in the xchat history.\n\'none\' Errors are not displayed')
 
 xchat.hook_print('Channel Message', translate_cm_cb)

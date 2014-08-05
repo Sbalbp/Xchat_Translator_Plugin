@@ -31,19 +31,22 @@ import sys
 
 pyVersion = sys.version_info[0]
 
-errorsMode = 'dialog'
+printMode = 'print'
 
-displayMode = 'both'
+displayMode = 'compressed'
 
 custom_emit = False
 
 def notify(text, info = True):
 	if(info):
-		xchat.command('GUI MSGBOX \"'+text+'\"')
-	else:
-		if(errorsMode == 'dialog'):
+		if(printMode == 'dialog'):
 			xchat.command('GUI MSGBOX \"'+text+'\"')
-		elif(errorsMode == 'print'):
+		elif(printMode == 'print'):
+			print('Translator plugin information:\n'+text)
+	else:
+		if(printMode == 'dialog'):
+			xchat.command('GUI MSGBOX \"'+text+'\"')
+		elif(printMode == 'print'):
 			print('Translator plugin error: '+text)
 
 def userBlocked(user):
@@ -93,6 +96,8 @@ def parseBindArguments(args):
 
 def translate(text, user, direction):
 	result = None
+	source = None
+	target = None
 
 	if(userBlocked(user)):
 		return None
@@ -102,9 +107,11 @@ def translate(text, user, direction):
 
 	dictionary = files.getDictionary()[direction]
 
-	for key in [user+'@'+getFullChannel(), getFullChannel(), 'default']:
+	for key in [user, getFullChannel(), 'default']:
 		if(key in dictionary.keys()):
 			result = iface.translate(text, dictionary[key]['source'], dictionary[key]['target'])
+			source = dictionary[key]['source']
+			target = dictionary[key]['target']
 			break
 
 	if(result != None):
@@ -113,10 +120,8 @@ def translate(text, user, direction):
 		else:
 			notify(result['errorMsg'], info=False)
 			result = None
-	else:
-		notify('No language pair associated to '+direction+' messages for '+user)
 
-	return [result, [dictionary[key]['source'],dictionary[key]['target']]]
+	return [result, [source, target]]
 
 def apertium_apy_cb(word, word_eol, userdata):
 	if(len(word) <= 1):
@@ -136,9 +141,9 @@ def apertium_apy_cb(word, word_eol, userdata):
 			files.setKey('apyAddress',iface.getAPYList())
 			notify('Successfully added the APY address: '+word[2])
 
-	return xchat.EAT_NONE
+	return xchat.EAT_ALL
 
-def apertium_apyremove_cb(word, word_eol, userdata):
+def apertium_removeapy_cb(word, word_eol, userdata):
 	if(len(word) <= 1):
 		iface.setAPYList([])
 		files.setKey('apyAddress',[])
@@ -150,7 +155,7 @@ def apertium_apyremove_cb(word, word_eol, userdata):
 		else:
 			notify('Couldn\'t remove APY address '+word[1],info=False)
 
-	return xchat.EAT_NONE
+	return xchat.EAT_ALL
 
 def apertium_pairs_cb(word, word_eol, userdata):
 	result = iface.getAllPairs()
@@ -172,7 +177,7 @@ def apertium_pairs_cb(word, word_eol, userdata):
 	else:
 		notify(result['errorMsg'],info=False)
 
-	return xchat.EAT_NONE
+	return xchat.EAT_ALL
 
 def apertium_check_cb(word, word_eol, userdata):
 	incoming = files.getKey('incoming')
@@ -219,11 +224,13 @@ def apertium_check_cb(word, word_eol, userdata):
 
 	notify(text)
 
+	return xchat.EAT_ALL
+
 def apertium_bind_cb(word, word_eol, userdata):
 	if(parseBindArguments(word[1:])):
 		if(len(word) > 4):
 			user = 1
-			username = word[2]+'@'+getFullChannel()
+			username = word[2]
 		else:
 			user = 0
 			username = getFullChannel()
@@ -233,9 +240,11 @@ def apertium_bind_cb(word, word_eol, userdata):
 		else:
 			notify('An error occurred while binding the language pair')
 
+	return xchat.EAT_ALL
+
 def apertium_unbind_cb(word, word_eol, userdata):
 	if(len(word) > 1):
-		key = word[1]+'@'+getFullChannel()
+		key = word[1]
 	else:
 		key = getFullChannel()
 
@@ -249,6 +258,8 @@ def apertium_unbind_cb(word, word_eol, userdata):
 	if(success):
 		notify('Successfully removed bindings for '+key)
 
+	return xchat.EAT_ALL
+
 def apertium_default_cb(word, word_eol, userdata):
 	if(parseBindArguments(word[1:])):
 		if(files.setLangPair(word[1],'default',word[2],word[3])):
@@ -256,10 +267,12 @@ def apertium_default_cb(word, word_eol, userdata):
 		else:
 			notify('An error occurred while binding the language pair')
 
+	return xchat.EAT_ALL
+
 def apertium_block_cb(word, word_eol, userdata):
 	if(len(word) < 2):
 		notify('Not enough arguments provided', info=False)
-		return
+		return xchat.EAT_ALL
 
 	blocked = files.getKey('blocked')
 
@@ -272,15 +285,19 @@ def apertium_block_cb(word, word_eol, userdata):
 
 	files.setKey('blocked',blocked)
 
+	return xchat.EAT_ALL
+
 def apertium_unblock_cb(word, word_eol, userdata):
 	if(len(word) < 2):
 		notify('Not enough arguments provided', info=False)
-		return
+		return xchat.EAT_ALL
 
 	if(userBlocked(word[1])):
 		blocked = files.getKey('blocked')
 		blocked[getFullChannel()].remove(word[1])
 		files.setKey('blocked',blocked)
+
+	return xchat.EAT_ALL
 
 def apertium_display_cb(word, word_eol, userdata):
 	global displayMode
@@ -294,28 +311,32 @@ def apertium_display_cb(word, word_eol, userdata):
 		elif(displayMode == 'compressed'):
 			text = '"Compressed"\nBoth the original message and its translation are displayed in a compressed way'
 		notify('Current display mode:\n'+text, info=True)
-		return
+		return xchat.EAT_ALL
 
 	if(not word[1] in ['both','replace','compressed']):
 		notify('Display mode argument must be \'both\', \'replace\' or \'compressed\'', info=False)
-		return
+		return xchat.EAT_ALL
 
 	displayMode = word[1]
 	files.setKey('displayMode',displayMode)
 	notify('Successfully set display mode to '+displayMode)
 
+	return xchat.EAT_ALL
+
 def apertium_errordisplay_cb(word, word_eol, userdata):
-	global errorsMode
+	global printMode
 
 	if(len(word) < 2):
 		notify('Not enough arguments provided', info=False)
-		return
+		return xchat.EAT_ALL
 
 	if(not word[1] in ['dialog','print','none']):
 		notify('Display mode argument must be \'dialog\', \'print\' or \'none\'', info=False)
-		return
+		return xchat.EAT_ALL
 
-	errorsMode = word[1]
+	printMode = word[1]
+
+	return xchat.EAT_ALL
 
 def translate_cm_cb(word, word_eol, userdata):
 	global custom_emit
@@ -374,12 +395,12 @@ iface.setAPYList(files.getKey('apyAddress'))
 if(files.getKey('displayMode') != None):
 	displayMode = files.getKey('displayMode')
 else:
-	displayMode = 'both'
+	displayMode = 'compressed'
 	files.setKey('displayMode',displayMode)
 
 xchat.hook_unload(unload_cb)
 xchat.hook_command('apertium_apy', apertium_apy_cb, help='/apertium_apy <position> <address>\nAdds a new APY address in a given position of the APY addresses list.\n If no arguments are passed, it just shows the list of addresses. If only the position argument is passed, it shows the APY address at that position.')
-xchat.hook_command('apertium_apyremove', apertium_apyremove_cb, help='/apertium_apyremove <position>\nRemoves the APY address at the given position from the APY list.\nIf no arguments are given, all the APYs are removed.')
+xchat.hook_command('apertium_removeapy', apertium_removeapy_cb, help='/apertium_removeapy <position>\nRemoves the APY address at the given position from the APY list.\nIf no arguments are given, all the APYs are removed.')
 xchat.hook_command('apertium_pairs', apertium_pairs_cb, help='/apertium_pairs\nShows all the available Apertium language pairs that can be used.')
 xchat.hook_command('apertium_check', apertium_check_cb, help='/apertium_check <user>\nShows the current language pair bindings for the given user.\nIf no argument is passed, shows the default and current channel language pair bindings.')
 xchat.hook_command('apertium_bind', apertium_bind_cb, help='/apertium_bind <direction> <user> <source> <target>\nBinds a given language pair to a user or channel.\ndirection must be either \'incoming\' or \'outgoing\'.\nuser (optional) is the name of the user whose messages are translated using the given language pair. If omitted, the language pair is bound to the channel itself.\nsource and target are the codes for the source and target languages from the language pair, respectively.')
@@ -388,7 +409,7 @@ xchat.hook_command('apertium_default', apertium_default_cb, help='/apertium_defa
 xchat.hook_command('apertium_block', apertium_block_cb, help='/apertium_block <user>\nBlocks the given user so that their messages are not translated in the current channel.')
 xchat.hook_command('apertium_unblock', apertium_unblock_cb, help='/apertium_unblock <user>\nUnblocks the given user so that their messages are translated again in the current channel.')
 xchat.hook_command('apertium_display', apertium_display_cb, help='/apertium_display <display_mode>\nSelects how translated messages should be displayed.\n display_mode must be one of the following:\n\'both\' Displays both the original message and its translation.\n\'replace\' Only the translated message is displayed.\n\'compressed\' Shows both the original text and its translation, in a compressed 2-line way.')
-xchat.hook_command('apertium_errordisplay', apertium_errordisplay_cb, help='/apertium_errordisplay <error_display_mode>\nSelects how errors should be displayed.\n error_display_mode must be one of the following:\n\'dialog\' Shows a dialog box with the error.\n\'print\' Prints the error in the xchat history.\n\'none\' Errors are not displayed')
+xchat.hook_command('apertium_infodisplay', apertium_errordisplay_cb, help='/apertium_infodisplay <info_display_mode>\nSelects how plugin information should be displayed.\n info_display_mode must be one of the following:\n\'dialog\' Shows a dialog box with the information.\n\'print\' Prints the information in the xchat history.\n\'none\' Information is not displayed')
 
 xchat.hook_print('Channel Message', translate_cm_cb)
 xchat.hook_print('Your Message', translate_ym_cb)

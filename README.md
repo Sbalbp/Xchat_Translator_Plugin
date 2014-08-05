@@ -28,11 +28,13 @@ this will always fetch the latest version of the Python module, so it can be use
 
 Now that you have the Python module, you might want to install it:
 
+* cd Apertium_Plugin_Utils
+
 * python setup.py install
 
 ###Loading the plugin
 
-To load the plugin with XChat go to XChat -> Load script or plugin and select the .py file that is included inside the src folder. Alternatively, you can also use the /load *route* command in XChat to load the plugin.
+To load the plugin with XChat go to XChat -> Load script or plugin and select the .py file that is included inside the src folder. Alternatively, you can also use the /load *route* command in XChat to load the plugin (for a non-absolute route, XChat current directory is by default *home*).
 
 ###Plugin commands
 
@@ -44,7 +46,7 @@ The following commands can be used in XChat when the plugin is loaded:
 
 	The default list only address is http://localhost:2737. The address http://apy.projectjj.com can be added to the list. This address, however, is not guaranteed to work 100% of the times, as it is still in test stage.
 
-* **/apertium_apyremove _position_** Removes athe APY at the given *position* from the APY list. If no arguments are passed, all the APYs are removed.
+* **/apertium_removeapy _position_** Removes athe APY at the given *position* from the APY list. If no arguments are passed, all the APYs are removed.
 * **/apertium_pairs** Ask the apy which language pairs are available and shows them.
 * **/apertium_check _user_** Show the language pair bindings for the given *user*. If the *user* argument is omitted, show the default and current channel language pair bindings.
 * **/apertium_bind _direction_ _user_ _source_ _target_** Sets a language pair for the given *user*. *direction* must be either 'incoming' (for incoming messages) or 'outgoing' (for messages sent). *source* and *target* are the source and target languages of the language pair to be set, respectively. If no *user* is provided, the language pair is instead bound to the current channel.
@@ -56,4 +58,4 @@ The following commands can be used in XChat when the plugin is loaded:
 * **/apertium_block _user_** Blocks a given *user* so that their messages are not translated.
 * **/apertium_unblock _user_** Unblocks a given blocked *user* to have their messages translated again.
 * **/apertium_display _displayMode_** Selects how translated messages are displayed. _displayMode_ must be 'both' (displays the original message and its translation), 'replace' (only displays the translation) or 'compressed' (displays both the original message and its translation in a compressed 2-line way). If no argument is passed, the current display mode is shown.
-* **/apertium_errordisplay _errorDisplayMode_** Selects how errors should be displayed. *errorDisplayMode* must be 'dialog' (shows a dialog box with the error), 'print' (prints the error in the xchat history) or 'none' (errors are not displayed).
+* **/apertium_infodisplay _infoDisplayMode_** Selects how information should be displayed. *infoDisplayMode* must be 'dialog' (shows a dialog box with the information), 'print' (prints the information in the xchat history) or 'none' (information is not displayed).

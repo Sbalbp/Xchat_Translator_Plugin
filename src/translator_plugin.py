@@ -210,15 +210,15 @@ def apertium_check_cb(word, word_eol, userdata):
 		else:
 			text = text+'None'
 	else:
-		text = text+'Language settings for user '+word[1]+'@'+channel+':\n\n incoming: '
-		if word[1]+'@'+channel in incoming.keys():
-			text = text+incoming[word[1]+'@'+channel]['source']+' - '+incoming[word[1]+'@'+channel]['target']+'\n'
+		text = text+'Language settings for user '+word[1]+':\n\n incoming: '
+		if word[1] in incoming.keys():
+			text = text+incoming[word[1]]['source']+' - '+incoming[word[1]]['target']+'\n'
 		else:
 			text = text+'None\n'
 
 		text = text+'  outgoing: '
-		if word[1]+'@'+channel in outgoing.keys():
-			text = text+outgoing[word[1]+'@'+channel]['source']+' - '+outgoing[word[1]+'@'+channel]['target']
+		if word[1] in outgoing.keys():
+			text = text+outgoing[word[1]]['source']+' - '+outgoing[word[1]]['target']
 		else:
 			text = text+'None'
 
@@ -361,9 +361,10 @@ def translate_cm_cb(word, word_eol, userdata):
 			text = word[1]
 
 		custom_emit = True
-		xchat.emit_print('Channel Message', word[0], text)
+		xchat.emit_print('Channel Message', word[0], text.replace('\t',' '))
 		custom_emit = False
-		return xchat.EAT_ALL
+
+	return xchat.EAT_ALL
 
 def translate_ym_cb(word, word_eol, userdata):
 	global custom_emit
@@ -380,8 +381,9 @@ def translate_ym_cb(word, word_eol, userdata):
 		text = word[1]
 
 	custom_emit = True
-	xchat.emit_print('Your Message', word[0], text)
+	xchat.emit_print('Your Message', word[0], text.replace('\t',' '))
 	custom_emit = False
+
 	return xchat.EAT_ALL
 
 def unload_cb(userdata):

@@ -25,9 +25,13 @@ __module_description__ = "Translates incoming messages using Apertium"
 __module_author__ = "Sergio Balbuena <sbalbp@gmail.com>"
 
 import xchat
+import sys
+import os
+
+sys.path.append(os.environ.get('PYTHONPATH'))
+
 import apertiumpluginutils.apertiumInterfaceAPY as iface
 import apertiumpluginutils.apertiumFiles as files
-import sys
 
 pyVersion = sys.version_info[0]
 

@@ -9,6 +9,18 @@ This plugin is currently still not finished and, therefore, some things are stil
 
 When loaded, this plugin keeps track of the user's language preferences for different users and channels (both incoming and outgoing messages). If the user has set the language pair eng-spa (English -> Spanish) for incoming messages from user1@channel1, then the plugin will attempt to tranlate all incoming messages from user1 in channel1 to Spanish (assuming they will be in English).
 
+There are 3 kinds of language pair bindings:
+
+* **user binding.** Only available for incoming messages. Binds a language pair to a specific username, so that messages from that user are translated according to the associated pair. This binding ignores channel names, meaning that the translating will be done in every channel a user with the username that was associated with the language pair speaks.
+
+* **channel binding.** Binds a language pair to a channel, so that all the messages to/from that channel are translated accordingly.
+
+* **default binding.** If set, the language pair set to default will be user to translate any text that does not fall under any of the previous binding categories.
+
+In case there exist different kinds of bindings that could be user to translate a message, the order of priority (from most to least) is: user, channel, default. This means that if a user who has an associated language pair sends a message in a channel that also has an associated language pair, the message will be translated using the the pair associated to the user. Any users who don't have language pair bindings will have their messages translated using the channel associated language pair.
+
+All bindings are stored to a preferences file and are, therefore, persistent across different XChat sessions.
+
 The translating is done by an [Apertium-apy](http://wiki.apertium.org/wiki/Apy "Apertium-apy") that may run locally or on a remote location (its address can be set from within the plugin).
 
 The plugin is able to use several APY instances, as it stores an ordered APY list. The first APY in the list takes priority when the plugin need to make a request to an APY. If the first APY is unreachable or unable to give an answer, the plugin will attempt to make the same request to the second APY in the list, and so on.

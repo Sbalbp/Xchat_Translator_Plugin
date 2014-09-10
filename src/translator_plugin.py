@@ -369,11 +369,6 @@ def translate_cm_cb(word, word_eol, userdata):
 	return xchat.EAT_ALL
 
 def translate_ym_cb(word, word_eol, userdata):
-	global custom_emit
-
-	if(custom_emit):
-		return xchat.EAT_NONE
-
 	result = translate(word[1],'default','outgoing')
 	translation = result[0]
 
@@ -382,9 +377,7 @@ def translate_ym_cb(word, word_eol, userdata):
 	else:
 		text = word[1]
 
-	custom_emit = True
-	xchat.emit_print('Your Message', word[0], text.replace('\t',' '))
-	custom_emit = False
+	xchat.command("msg #channel %s" % text.replace('\t',' '))
 
 	return xchat.EAT_ALL
 
